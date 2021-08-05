@@ -1,0 +1,80 @@
+package com.divya.spring.security;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+
+@Configuration //used as configuration by Spring boot to fetch username and password automatically
+public class MySecurityConfig extends WebSecurityConfigurerAdapter{
+
+	//@SuppressWarnings("unused")
+	@Autowired
+		private PasswordEncoder passwordEncoder;
+	
+	@Autowired
+	private MyAuthenticationProvider authenticationProvider;
+	
+	@Override
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		
+		auth.authenticationProvider(authenticationProvider);
+	
+	}
+	
+////	@Override
+	
+//	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//		
+//		//For encoding Password
+//		BCryptPasswordEncoder passwordEncoder=new BCryptPasswordEncoder();
+//		
+//		//Create and store user on flyway
+//		
+//		InMemoryUserDetailsManager userDetailsService=new InMemoryUserDetailsManager();
+//		//user is a class from spring to create user
+//		UserDetails user =User.withUsername("divya").password(passwordEncoder.encode("krishnan")).authorities("read").build();
+//		userDetailsService.createUser(user);
+//		
+//		//This is used to encode password.
+//		auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
+//		
+//	
+//	}
+	 //Customize Security
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		
+		//To Call custom Filter
+		http.httpBasic();
+		
+		http.authorizeRequests().antMatchers("/hello").authenticated();
+		http.addFilterBefore(new MySecurityFilter(), BasicAuthenticationFilter.class);
+		//This is for Basic Authentication
+		//http.httpBasic(); 
+		
+		//For form based Authentication use below line
+		//http.formLogin();
+		
+		//Means all request that are received will be authenticated
+		//http.authorizeRequests().anyRequest().authenticated(); 
+		
+		//For specific request
+		
+		//http.authorizeRequests().antMatchers("/hello").authenticated().anyRequest().denyAll();
+	}
+	
+	@Bean
+	public BCryptPasswordEncoder paswordEncoder() //Invoke this method where we want or autowire it
+	{
+		return new BCryptPasswordEncoder();
+	}
+}
